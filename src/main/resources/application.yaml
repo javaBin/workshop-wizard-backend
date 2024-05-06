@@ -1,0 +1,21 @@
+ktor:
+  application:
+    modules:
+      - no.javabin.AppKt.module
+  development: true
+  deployment:
+    port: 8080
+
+database:
+  embedded: false
+  host: localhost
+  port: 5432
+  databaseName: workshop
+  user: workshop
+  password: workshop
+
+
+auth0:
+  issuer: 'https://test-javabin.eu.auth0.com/'
+  # The audience is the identifier of the API that you want to call (client-id of the application in Auth0)
+  audience: workshop-wizard-backend
