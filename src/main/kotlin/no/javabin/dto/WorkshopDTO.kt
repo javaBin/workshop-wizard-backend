@@ -9,6 +9,8 @@ data class WorkshopDTO(
     val description: String,
     val startTime: Instant,
     val endTime: Instant,
-    val capacity: Int
+    val capacity: Int,
+    val active: Boolean,
+    val speakers: List<SpeakerDTO>
 )
 

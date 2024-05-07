@@ -1,19 +1,18 @@
 package no.javabin.repository
 
 import no.javabin.dto.UserDTO
+import no.javabin.repository.UserRepository.UserTable
 import com.inventy.plugins.DatabaseFactory.Companion.dbQuery
 import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.insertAndGetId
-import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 
 class User(
     override val id: Int?,
     val firstName: String,
     val lastName: String,
     val email: String,
-    val imageUrl: String,
+    val imageUrl: String?,
     val isAdmin: Boolean,
 ) : Model {
 
@@ -22,14 +21,14 @@ class User(
             firstName,
             lastName,
             email,
-            imageUrl,
+            imageUrl ?: "",
             isAdmin,
         )
     }
 }
 
 class UserRepository{
-    internal object UserTable : IntIdTable() {
+    internal object UserTable : IntIdTable("\"user\"") {
         val firstName = varchar("first_name", 256)
         val lastName = varchar("last_name", 256)
         val email = varchar("email", 256)
@@ -64,7 +63,7 @@ class UserRepository{
 
     suspend fun readByEmail(email: String): User? {
         return dbQuery {
-            UserTable.select { UserTable.email eq email }
+            UserTable.selectAll().where { UserTable.email eq email }
                 .map(UserTable::toModel)
                 .firstOrNull()
         }

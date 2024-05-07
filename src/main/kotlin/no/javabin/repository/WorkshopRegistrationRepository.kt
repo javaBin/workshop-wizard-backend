@@ -3,10 +3,8 @@ package no.javabin.repository
 import com.inventy.plugins.DatabaseFactory.Companion.dbQuery
 import kotlinx.datetime.Instant
 import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.insertAndGetId
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.kotlin.datetime.timestamp
-import org.jetbrains.exposed.sql.select
 
 
 enum class WorkshopRegistrationState {
@@ -16,7 +14,7 @@ enum class WorkshopRegistrationState {
 class WorkshopRegistration(
     override val id: Int,
     val userId: Int,
-    val workshopId: Int,
+    val workshopId: String,
     val createdAt: Instant,
     val updatedAt: Instant,
     var state: WorkshopRegistrationState = WorkshopRegistrationState.PENDING,
@@ -33,7 +31,7 @@ class WorkshopRegistrationRepository(userId: Int) : UserOwnedRepository(userId) 
         fun toModel(it: ResultRow) = WorkshopRegistration(
             it[id].value,
             it[userId].value,
-            it[workshopId].value,
+            it[workshopId],
             it[createdAt],
             it[updatedAt],
             it[state],
@@ -51,7 +49,7 @@ class WorkshopRegistrationRepository(userId: Int) : UserOwnedRepository(userId) 
     }
 
     suspend fun list(): List<WorkshopRegistration> = dbQuery {
-        WorkshopRegistrationTable.select{ WorkshopRegistrationTable.userId eq userId }
+        WorkshopRegistrationTable.selectAll().where { WorkshopRegistrationTable.userId eq userId }
             .map(WorkshopRegistrationTable::toModel)
     }
 

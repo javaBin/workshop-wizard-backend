@@ -1,8 +1,6 @@
 package no.javabin
 
-import no.javabin.config.configureAuth
-import no.javabin.config.configureRouting
-import no.javabin.config.configureSerialization
+import no.javabin.config.*
 import com.inventy.plugins.DatabaseFactory
 import io.ktor.server.application.*
 
@@ -23,6 +21,3 @@ fun Application.module() {
     configureAuth()
     configureRouting()
 }
-
-
-

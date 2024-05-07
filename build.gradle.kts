@@ -26,8 +26,17 @@ application {
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
 }
 
+// Apply a specific Java toolchain to ease working on different environments.
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
+
 repositories {
     mavenCentral()
+    gradlePluginPortal()
 }
 
 dependencies {

@@ -7,12 +7,16 @@ ktor:
     port: 8080
 
 database:
-  embedded: false
+  embedded: true
   host: localhost
   port: 5432
   databaseName: workshop
   user: workshop
   password: workshop
+
+workshopDatabase:
+  workshopDataUrl: 'https://sleepingpill.javazone.no/public/allSessions/javazone_2023'
+  workshopDataUpdateIntervalMinutes: 1
 
 
 auth0:

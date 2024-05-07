@@ -1,13 +1,16 @@
 package com.inventy.plugins
 
 import com.zaxxer.hikari.HikariDataSource
-import java.util.concurrent.TimeUnit.MINUTES
-import org.jetbrains.exposed.sql.*
 import kotlinx.coroutines.*
 import org.flywaydb.core.Flyway
-import org.postgresql.ds.PGSimpleDataSource
 import org.h2.jdbcx.JdbcDataSource
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.sql.transactions.experimental.withSuspendTransaction
+import org.postgresql.ds.PGSimpleDataSource
+import java.util.concurrent.TimeUnit.MINUTES
+
 
 class DatabaseFactory(
     private val dbHost: String,
@@ -16,11 +19,16 @@ class DatabaseFactory(
     private val dbPassword: String,
     private val databaseName: String,
     private val embedded: Boolean = false
-    ) {
+) {
 
     companion object {
         suspend fun <T> dbQuery(block: suspend () -> T): T =
-            newSuspendedTransaction(Dispatchers.IO) { block() }
+            withContext(Dispatchers.IO) {
+                TransactionManager.currentOrNull()
+                    ?.let { it.withSuspendTransaction { block() } }
+                    ?: newSuspendedTransaction { block() }
+            }
+
     }
 
     fun init() {
@@ -63,5 +71,5 @@ class DatabaseFactory(
 
 
     }
-
 }
+
