@@ -60,7 +60,7 @@ class WorkshopRegistrationRepository {
     }
 
     suspend fun list(userId: Int): List<WorkshopRegistrationDTO> = dbQuery {
-        WorkshopRegistrationTable.innerJoin(WorkshopRepository.WorkshopTable, { workshopId }, { id })
+        ( WorkshopRegistrationTable innerJoin WorkshopRepository.WorkshopTable )
             .select(
                 WorkshopRepository.WorkshopTable.title,
                 WorkshopRepository.WorkshopTable.startTime,

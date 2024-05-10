@@ -6,9 +6,7 @@ import no.javabin.dto.WorkshopImport
 import no.javabin.util.TimeUtil
 import com.inventy.plugins.DatabaseFactory.Companion.dbQuery
 import kotlinx.datetime.Instant
-import no.javabin.repository.WorkshopRepository.WorkshopTable.id
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.notInList
 import org.jetbrains.exposed.sql.kotlin.datetime.timestamp
 
@@ -50,36 +48,37 @@ class WorkshopRepository {
             active = it[active],
         )
 
-        fun toDTO(it: ResultRow): WorkshopDTO {
-            val speakers =
-                SpeakerRepository.SpeakerTable.selectAll().where { SpeakerRepository.SpeakerTable.workshopId eq it[id] }
-                    .map { speakerRow ->
-                        SpeakerDTO(
-                            name = speakerRow[SpeakerRepository.SpeakerTable.name],
-                            bio = speakerRow[SpeakerRepository.SpeakerTable.bio],
-                            twitter = speakerRow[SpeakerRepository.SpeakerTable.twitter]
-                        )
-                    }
-            return WorkshopDTO(
-                title = it[title],
-                description = it[description],
-                startTime = TimeUtil.toGmtPlus2(it[startTime]),
-                endTime = TimeUtil.toGmtPlus2(it[endTime]),
-                capacity = it[capacity],
-                active = it[active],
-                speakers = speakers
+        fun toDTO(it: ResultRow) = WorkshopDTO(
+            title = it[title],
+            description = it[description],
+            startTime = TimeUtil.toGmtPlus2(it[startTime]),
+            endTime = TimeUtil.toGmtPlus2(it[endTime]),
+            capacity = it[capacity],
+            active = it[active],
+            speakers = listOf(
+                SpeakerDTO(
+                    name = it[SpeakerRepository.SpeakerTable.name],
+                    bio = it[SpeakerRepository.SpeakerTable.bio],
+                    twitter = it[SpeakerRepository.SpeakerTable.twitter]
+                )
             )
-        }
+        )
     }
 
     suspend fun list(): List<WorkshopDTO> = dbQuery {
-        WorkshopTable
-            .selectAll().where { WorkshopTable.active eq true }
+        (WorkshopTable innerJoin SpeakerRepository.SpeakerTable)
+            .selectAll()
             .map(WorkshopTable::toDTO)
+            .groupBy { it.title }
+            .map { (_, workshops) ->
+                workshops.first().copy(
+                    speakers = workshops.flatMap { it.speakers }
+                )
+            }
     }
 
     suspend fun listByIdsNotInList(idLIst: List<String>): List<Workshop> = dbQuery {
-        WorkshopTable.selectAll().where(id notInList idLIst)
+        WorkshopTable.selectAll().where(WorkshopTable.id notInList idLIst)
             .map(WorkshopTable::toModel)
     }
 
@@ -92,7 +91,7 @@ class WorkshopRepository {
 
     private suspend fun upsertActive(workshops: List<WorkshopImport>) = dbQuery {
         WorkshopTable.batchUpsert(workshops) { workshop ->
-            this[id] = workshop.id
+            this[WorkshopTable.id] = workshop.id
             this[WorkshopTable.title] = workshop.title
             this[WorkshopTable.description] =
                 workshop.abstract.take(250) + if (workshop.abstract.length > 250) " ..." else ""
@@ -105,7 +104,7 @@ class WorkshopRepository {
 
     private suspend fun upsert(workshops: List<Workshop>) = dbQuery {
         WorkshopTable.batchUpsert(workshops) { workshop ->
-            this[id] = workshop.id
+            this[WorkshopTable.id] = workshop.id
             this[WorkshopTable.title] = workshop.title
             this[WorkshopTable.description] = workshop.description
             this[WorkshopTable.startTime] = workshop.startTime
