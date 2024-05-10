@@ -13,8 +13,9 @@ To start the application:
 
 
 ### TODO
-- [ ] Finish workshop endpoint
+- [X] Finish workshop endpoint
 - [ ] Add and finish user endpoint
-- [ ] Add and Finish registration endpoint
-- [ ] Add and Finish cancellation endpoint
+  - [ ] Add and finish login endpoint
+- [X] Add and Finish registration endpoint
+  - [ ] Do registration in separate process 
 - [ ] Finish workshop wizard
