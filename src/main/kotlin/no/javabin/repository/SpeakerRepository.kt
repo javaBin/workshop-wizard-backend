@@ -17,7 +17,7 @@ data class Speaker(
 class SpeakerRepository {
 
     internal object SpeakerTable : Table() {
-        val name = varchar("NAME", 256)
+        val name = varchar("name", 256)
         val bio = varchar("bio", 2048)
         val twitter = varchar("twitter", 256)
         val workshopId = reference("workshop_id", WorkshopRepository.WorkshopTable.id)

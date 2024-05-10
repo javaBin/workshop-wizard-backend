@@ -3,6 +3,7 @@ package no.javabin
 import no.javabin.config.*
 import com.inventy.plugins.DatabaseFactory
 import io.ktor.server.application.*
+import no.javabin.repository.UserRepository
 
 
 fun main(args: Array<String>): Unit =
@@ -18,6 +19,7 @@ fun Application.module() {
         databaseName = environment.config.property("database.databaseName").getString(),
         embedded = environment.config.property("database.embedded").getString().toBoolean(),
     ).init()
-    configureAuth()
-    configureRouting()
+    val userRepository = UserRepository()
+    configureAuth(userRepository)
+    configureRouting(userRepository)
 }

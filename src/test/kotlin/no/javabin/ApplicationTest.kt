@@ -12,7 +12,7 @@ class ApplicationTest {
     fun testRoot() = testApplication {
         System.setProperty("RUNNING_IN_TEST", "true")
         application {
-            configureRouting()
+            configureRouting(userRepository)
         }
         client.get("/").apply {
             assertEquals(HttpStatusCode.OK, status)

@@ -2,13 +2,17 @@ package no.javabin.repository
 
 import com.inventy.plugins.DatabaseFactory.Companion.dbQuery
 import kotlinx.datetime.Instant
+import no.javabin.dto.WorkshopRegistrationDTO
+import no.javabin.repository.WorkshopRegistrationRepository.WorkshopRegistrationTable
+import no.javabin.util.TimeUtil
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.kotlin.datetime.timestamp
 
 
 enum class WorkshopRegistrationState {
-    PENDING, WAITLIST, APPROVED, CANCELED,
+    PENDING, WAITLIST, APPROVED, CANCELLED,
 }
 
 class WorkshopRegistration(
@@ -20,9 +24,9 @@ class WorkshopRegistration(
     var state: WorkshopRegistrationState = WorkshopRegistrationState.PENDING,
 ) : Model
 
-class WorkshopRegistrationRepository(userId: Int) : UserOwnedRepository(userId) {
-    private object WorkshopRegistrationTable : IntIdTable() {
-        val userId = reference("userId", UserRepository.UserTable.id)
+class WorkshopRegistrationRepository {
+    private object WorkshopRegistrationTable : IntIdTable("workshop_registration") {
+        val userId = reference("user_id", UserRepository.UserTable.id)
         val workshopId = reference("workshop_id", WorkshopRepository.WorkshopTable.id)
         val state = enumerationByName<WorkshopRegistrationState>("state", 64)
         val createdAt = timestamp("created_at")
@@ -36,6 +40,13 @@ class WorkshopRegistrationRepository(userId: Int) : UserOwnedRepository(userId) 
             it[updatedAt],
             it[state],
         )
+
+        fun toDTO(it: ResultRow) = WorkshopRegistrationDTO(
+            workshopTitle = it[WorkshopRepository.WorkshopTable.title],
+            workshopStartTime = TimeUtil.toGmtPlus2(it[WorkshopRepository.WorkshopTable.startTime]),
+            workshopEndTime = TimeUtil.toGmtPlus2(it[WorkshopRepository.WorkshopTable.endTime]),
+            state = it[state],
+        )
     }
 
     suspend fun create(registration: WorkshopRegistration): Int = dbQuery {
@@ -48,15 +59,45 @@ class WorkshopRegistrationRepository(userId: Int) : UserOwnedRepository(userId) 
         }.value
     }
 
-    suspend fun list(): List<WorkshopRegistration> = dbQuery {
-        WorkshopRegistrationTable.selectAll().where { WorkshopRegistrationTable.userId eq userId }
-            .map(WorkshopRegistrationTable::toModel)
+    suspend fun list(userId: Int): List<WorkshopRegistrationDTO> = dbQuery {
+        WorkshopRegistrationTable.innerJoin(WorkshopRepository.WorkshopTable, { workshopId }, { id })
+            .select(
+                WorkshopRepository.WorkshopTable.title,
+                WorkshopRepository.WorkshopTable.startTime,
+                WorkshopRepository.WorkshopTable.endTime,
+                WorkshopRegistrationTable.state
+            ).where { WorkshopRegistrationTable.userId eq userId }
+            .map(WorkshopRegistrationTable::toDTO)
     }
 
     suspend fun getByUserId(userId: Int): List<WorkshopRegistration> {
         return dbQuery {
-            WorkshopRegistrationTable.select { WorkshopRegistrationTable.userId eq userId }
+            WorkshopRegistrationTable.selectAll().where { WorkshopRegistrationTable.userId eq userId }
                 .map(WorkshopRegistrationTable::toModel)
+        }
+    }
+
+    suspend fun getByWorkshopAndUser(workshopId: String, userId: Int): WorkshopRegistration? {
+        return dbQuery {
+            WorkshopRegistrationTable.selectAll()
+                .where { (WorkshopRegistrationTable.workshopId eq workshopId) and (WorkshopRegistrationTable.userId eq userId) }
+                .map(WorkshopRegistrationTable::toModel).singleOrNull()
+        }
+    }
+
+
+    suspend fun getByWorkshop(workshopId: String): List<WorkshopRegistration> {
+        return dbQuery {
+            WorkshopRegistrationTable.selectAll().where { WorkshopRegistrationTable.workshopId eq workshopId }
+                .map(WorkshopRegistrationTable::toModel)
+        }
+    }
+
+    suspend fun updateState(id: Int, state: WorkshopRegistrationState) {
+        return dbQuery {
+            WorkshopRegistrationTable.update({ WorkshopRegistrationTable.id eq id }) {
+                it[WorkshopRegistrationTable.state] = state
+            }
         }
     }
 }

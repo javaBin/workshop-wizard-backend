@@ -1,14 +1,12 @@
 package no.javabin.repository
 
 import no.javabin.dto.UserDTO
-import no.javabin.repository.UserRepository.UserTable
 import com.inventy.plugins.DatabaseFactory.Companion.dbQuery
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 
 class User(
-    override val id: Int?,
+    override val id: Int,
     val firstName: String,
     val lastName: String,
     val email: String,
