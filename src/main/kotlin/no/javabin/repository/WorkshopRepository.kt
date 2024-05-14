@@ -6,7 +6,9 @@ import no.javabin.dto.WorkshopImport
 import no.javabin.util.TimeUtil
 import com.inventy.plugins.DatabaseFactory.Companion.dbQuery
 import kotlinx.datetime.Instant
+import no.javabin.repository.WorkshopRepository.WorkshopTable
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.notInList
 import org.jetbrains.exposed.sql.kotlin.datetime.timestamp
 
@@ -65,9 +67,9 @@ class WorkshopRepository {
         )
     }
 
-    suspend fun list(): List<WorkshopDTO> = dbQuery {
+    suspend fun getActiveWorkshops(): List<WorkshopDTO> = dbQuery {
         (WorkshopTable innerJoin SpeakerRepository.SpeakerTable)
-            .selectAll()
+            .selectAll().where { WorkshopTable.active eq true }
             .map(WorkshopTable::toDTO)
             .groupBy { it.title }
             .map { (_, workshops) ->
@@ -77,15 +79,15 @@ class WorkshopRepository {
             }
     }
 
-    suspend fun listByIdsNotInList(idLIst: List<String>): List<Workshop> = dbQuery {
-        WorkshopTable.selectAll().where(WorkshopTable.id notInList idLIst)
-            .map(WorkshopTable::toModel)
-    }
-
     suspend fun getById(id: String): Workshop? = dbQuery {
-        WorkshopTable.select { WorkshopTable.id eq id }
+        WorkshopTable.selectAll().where { WorkshopTable.id eq id }
             .map(WorkshopTable::toModel)
             .singleOrNull()
+    }
+
+    private suspend fun getByIdsNotInList(idLIst: List<String>): List<Workshop> = dbQuery {
+        WorkshopTable.selectAll().where(WorkshopTable.id notInList idLIst)
+            .map(WorkshopTable::toModel)
     }
 
 
@@ -116,7 +118,7 @@ class WorkshopRepository {
 
     private suspend fun setWorkshopsToDisabled(activeWorkshops: List<WorkshopImport>) {
         val activeWorkshopsIds = activeWorkshops.map { it.id }
-        val allDisabledList = listByIdsNotInList(activeWorkshopsIds)
+        val allDisabledList = getByIdsNotInList(activeWorkshopsIds)
             .map { it.copy(active = false) }
         upsert(allDisabledList)
     }

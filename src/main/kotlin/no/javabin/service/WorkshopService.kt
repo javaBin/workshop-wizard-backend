@@ -23,11 +23,11 @@ class WorkshopService(
 
 
     suspend fun getWorkshops(): List<WorkshopDTO> {
-        return workshopRepository.list()
+        return workshopRepository.getActiveWorkshops()
     }
 
     suspend fun getWorkshopRegistrations(userId: Int): List<WorkshopRegistrationDTO> {
-        return workshopRegistrationRepository.list(userId)
+        return workshopRegistrationRepository.getByUserId(userId)
     }
 
     suspend fun workshopDatabaseUpdate() {
@@ -88,7 +88,7 @@ class WorkshopService(
                     return
                 }
                 WorkshopRegistrationState.PENDING,
-                WorkshopRegistrationState.WAITLIST,
+                WorkshopRegistrationState.WAIT_LIST,
                 WorkshopRegistrationState.CANCELLED -> {
                     log.info("Re-registering user ${user.email} for workshop $workshopId")
                     workshopRegistrationRepository.updateState(registration.id, WorkshopRegistrationState.APPROVED)

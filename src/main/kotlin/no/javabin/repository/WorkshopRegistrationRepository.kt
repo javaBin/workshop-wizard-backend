@@ -12,7 +12,7 @@ import org.jetbrains.exposed.sql.kotlin.datetime.timestamp
 
 
 enum class WorkshopRegistrationState {
-    PENDING, WAITLIST, APPROVED, CANCELLED,
+    PENDING, WAIT_LIST, APPROVED, CANCELLED,
 }
 
 class WorkshopRegistration(
@@ -59,7 +59,7 @@ class WorkshopRegistrationRepository {
         }.value
     }
 
-    suspend fun list(userId: Int): List<WorkshopRegistrationDTO> = dbQuery {
+    suspend fun getByUserId(userId: Int): List<WorkshopRegistrationDTO> = dbQuery {
         ( WorkshopRegistrationTable innerJoin WorkshopRepository.WorkshopTable )
             .select(
                 WorkshopRepository.WorkshopTable.title,
@@ -68,13 +68,6 @@ class WorkshopRegistrationRepository {
                 WorkshopRegistrationTable.state
             ).where { WorkshopRegistrationTable.userId eq userId }
             .map(WorkshopRegistrationTable::toDTO)
-    }
-
-    suspend fun getByUserId(userId: Int): List<WorkshopRegistration> {
-        return dbQuery {
-            WorkshopRegistrationTable.selectAll().where { WorkshopRegistrationTable.userId eq userId }
-                .map(WorkshopRegistrationTable::toModel)
-        }
     }
 
     suspend fun getByWorkshopAndUser(workshopId: String, userId: Int): WorkshopRegistration? {
