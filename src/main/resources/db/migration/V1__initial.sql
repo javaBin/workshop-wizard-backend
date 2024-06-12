@@ -27,7 +27,7 @@ create table workshop
 create table speaker
 (
     index       int,
-    name        varchar,
+    full_name        varchar,
     workshop_id varchar(64),
     bio         varchar,
     twitter     varchar,
@@ -40,13 +40,13 @@ create table speaker
 
 create table workshop_registration
 (
-    id          int GENERATED ALWAYS AS IDENTITY primary key,
     user_id     int,
     workshop_id varchar(64),
-    state       varchar,
+    status       varchar,
     created_at  timestamp with time zone not null default current_timestamp,
     updated_at  timestamp with time zone not null default current_timestamp,
 
     constraint workshop_registration_fk_workshop foreign key (workshop_id) references workshop (id),
-    constraint workshop_registration_fk_user foreign key (user_id) references "user" (id)
+    constraint workshop_registration_fk_user foreign key (user_id) references "user" (id),
+    constraint unique_user_workshop UNIQUE (user_id, workshop_id)
 );

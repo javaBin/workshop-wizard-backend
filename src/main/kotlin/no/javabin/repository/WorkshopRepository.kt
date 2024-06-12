@@ -68,6 +68,18 @@ class WorkshopRepository {
         )
     }
 
+    suspend fun list(): List<WorkshopDTO> = dbQuery {
+        (WorkshopTable innerJoin SpeakerRepository.SpeakerTable)
+            .selectAll()
+            .map(WorkshopTable::toDTO)
+            .groupBy { it.title }
+            .map { (_, workshops) ->
+                workshops.first().copy(
+                    speakers = workshops.flatMap { it.speakers }
+                )
+            }
+    }
+
     suspend fun getActiveWorkshops(): List<WorkshopDTO> = dbQuery {
         (WorkshopTable innerJoin SpeakerRepository.SpeakerTable)
             .selectAll().where { WorkshopTable.active eq true }
@@ -80,17 +92,16 @@ class WorkshopRepository {
             }
     }
 
-    suspend fun getById(id: String): Workshop? = dbQuery {
-        WorkshopTable.selectAll().where { WorkshopTable.id eq id }
-            .map(WorkshopTable::toModel)
-            .singleOrNull()
-    }
-
     private suspend fun getByIdsNotInList(idLIst: List<String>): List<Workshop> = dbQuery {
         WorkshopTable.selectAll().where(WorkshopTable.id notInList idLIst)
             .map(WorkshopTable::toModel)
     }
 
+    suspend fun getById(id: String): Workshop? = dbQuery {
+        WorkshopTable.selectAll().where { WorkshopTable.id eq id }
+            .map(WorkshopTable::toModel)
+            .singleOrNull()
+    }
 
     private suspend fun upsertActive(workshops: List<WorkshopImport>) = dbQuery {
         WorkshopTable.batchUpsert(workshops) { workshop ->

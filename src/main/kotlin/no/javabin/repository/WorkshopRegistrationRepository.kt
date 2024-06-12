@@ -4,42 +4,45 @@ import com.inventy.plugins.DatabaseFactory.Companion.dbQuery
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import no.javabin.dto.WorkshopRegistrationDTO
-import no.javabin.repository.WorkshopRegistrationRepository.WorkshopRegistrationTable
 import no.javabin.util.TimeUtil
+import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.kotlin.datetime.timestamp
 
 
-enum class WorkshopRegistrationState {
-    PENDING, WAIT_LIST, APPROVED, CANCELLED,
+enum class WorkshopRegistrationStatus {
+    WAIT_LIST, APPROVED, CANCELLED,
 }
 
-class WorkshopRegistration(
-    override val id: Int,
+data class WorkshopRegistration(
     val userId: Int,
     val workshopId: String,
     val createdAt: Instant,
     val updatedAt: Instant,
-    var state: WorkshopRegistrationState = WorkshopRegistrationState.PENDING,
-) : Model
+    var status: WorkshopRegistrationStatus = WorkshopRegistrationStatus.WAIT_LIST,
+)
 
 class WorkshopRegistrationRepository {
-    private object WorkshopRegistrationTable : IntIdTable("workshop_registration") {
+    internal object WorkshopRegistrationTable : Table("workshop_registration") {
         val userId = reference("user_id", UserRepository.UserTable.id)
         val workshopId = reference("workshop_id", WorkshopRepository.WorkshopTable.id)
-        val state = enumerationByName<WorkshopRegistrationState>("state", 64)
+        val status = enumerationByName<WorkshopRegistrationStatus>("status", 64)
         val createdAt = timestamp("created_at")
         val updatedAt = timestamp("updated_at")
 
+        override val primaryKey = PrimaryKey(
+            arrayOf(
+                userId, workshopId
+            ), "id"
+        )
+
         fun toModel(it: ResultRow) = WorkshopRegistration(
-            it[id].value,
             it[userId].value,
             it[workshopId],
             it[createdAt],
             it[updatedAt],
-            it[state],
+            it[status],
         )
 
         fun toDTO(it: ResultRow) = WorkshopRegistrationDTO(
@@ -47,18 +50,18 @@ class WorkshopRegistrationRepository {
             workshopTitle = it[WorkshopRepository.WorkshopTable.title],
             workshopStartTime = TimeUtil.toGmtPlus2(it[WorkshopRepository.WorkshopTable.startTime]),
             workshopEndTime = TimeUtil.toGmtPlus2(it[WorkshopRepository.WorkshopTable.endTime]),
-            state = it[state],
+            status = it[status],
         )
     }
 
-    suspend fun create(workshopId: String, userId: Int, state: WorkshopRegistrationState): Int = dbQuery {
-        WorkshopRegistrationTable.insertAndGetId {
+    suspend fun create(workshopId: String, userId: Int, state: WorkshopRegistrationStatus) = dbQuery {
+        WorkshopRegistrationTable.insert {
             it[this.userId] = userId
             it[this.workshopId] = workshopId
-            it[this.state] = state
+            it[this.status] = state
             it[createdAt] = Clock.System.now()
             it[updatedAt] = Clock.System.now()
-        }.value
+        }
     }
 
     suspend fun getByUserId(userId: Int): List<WorkshopRegistrationDTO> = dbQuery {
@@ -67,7 +70,7 @@ class WorkshopRegistrationRepository {
                 WorkshopRepository.WorkshopTable.title,
                 WorkshopRepository.WorkshopTable.startTime,
                 WorkshopRepository.WorkshopTable.endTime,
-                WorkshopRegistrationTable.state,
+                WorkshopRegistrationTable.status,
                 WorkshopRegistrationTable.workshopId
             ).where { WorkshopRegistrationTable.userId eq userId }
             .map(WorkshopRegistrationTable::toDTO)
@@ -84,15 +87,21 @@ class WorkshopRegistrationRepository {
 
     suspend fun getByWorkshop(workshopId: String): List<WorkshopRegistration> {
         return dbQuery {
-            WorkshopRegistrationTable.selectAll().where { WorkshopRegistrationTable.workshopId eq workshopId }.forUpdate()
+            WorkshopRegistrationTable.selectAll().where { WorkshopRegistrationTable.workshopId eq workshopId }
+                .forUpdate()
+                .orderBy(WorkshopRegistrationTable.updatedAt)
                 .map(WorkshopRegistrationTable::toModel)
         }
     }
 
-    suspend fun updateState(id: Int, state: WorkshopRegistrationState) {
+    suspend fun updateStatus(userId: Int, workshopId: String, status: WorkshopRegistrationStatus): Int {
         return dbQuery {
-            WorkshopRegistrationTable.update({ WorkshopRegistrationTable.id eq id }) {
-                it[WorkshopRegistrationTable.state] = state
+            WorkshopRegistrationTable.update({
+                (WorkshopRegistrationTable.userId eq userId) and (WorkshopRegistrationTable.workshopId eq workshopId)
+            })
+            {
+                it[WorkshopRegistrationTable.status] = status
+                it[updatedAt] = Clock.System.now()
             }
         }
     }
