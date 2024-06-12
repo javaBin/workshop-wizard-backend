@@ -1,22 +1,21 @@
 package no.javabin.config
 
-import no.javabin.route.*
-import no.javabin.service.UserService
-import no.javabin.service.WorkshopService
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.javabin.repository.*
+import no.javabin.repository.AdminRepository
+import no.javabin.repository.UserRepository
+import no.javabin.route.*
+import no.javabin.service.UserService
+import no.javabin.service.WorkshopService
 
-fun Application.configureRouting(userRepository: UserRepository) {
-    val adminRepository = AdminRepository()
-    val workshopRepository = WorkshopRepository()
-    val workshopRegistrationRepository = WorkshopRegistrationRepository()
-    val speakerRepository = SpeakerRepository()
-    val workshopService = WorkshopService(environment.config, workshopRepository, speakerRepository, workshopRegistrationRepository )
-    val userService = UserService(environment.config, workshopService, userRepository)
-
+fun Application.configureRouting(
+    userRepository: UserRepository,
+    workshopService: WorkshopService,
+    userService: UserService,
+    adminRepository: AdminRepository,
+) {
     configureAuth0Route(userRepository)
     configureUserRoutes(userService)
     configureWorkshopRoutes(workshopService)
@@ -26,7 +25,7 @@ fun Application.configureRouting(userRepository: UserRepository) {
     routing {
         authenticate("auth0-user") {
             get("/auth") {
-                call.respondText("Hello World!")
+                call.respondText("Hello World User!")
             }
         }
 
