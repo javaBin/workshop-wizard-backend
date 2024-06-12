@@ -50,7 +50,7 @@ VALUES ('18aaf407-ff02-4f49-b11d-29877a9de906', 'Moderne brukergrensesnitt i en 
 create table speaker
 (
     index       int,
-    name        varchar,
+    full_name        varchar,
     workshop_id varchar(64),
     bio         varchar,
     twitter     varchar,
@@ -66,7 +66,7 @@ create table workshop_registration
     id          int GENERATED ALWAYS AS IDENTITY primary key,
     user_id     int,
     workshop_id varchar(64),
-    state       varchar,
+    status       varchar,
     created_at  timestamp with time zone not null default current_timestamp,
     updated_at  timestamp with time zone not null default current_timestamp,
 
@@ -74,6 +74,6 @@ create table workshop_registration
     constraint workshop_registration_fk_user foreign key (user_id) references "user" (id)
 );
 
-INSERT INTO workshop_registration (user_id, workshop_id, state, created_at, updated_at)
+INSERT INTO workshop_registration (user_id, workshop_id, status, created_at, updated_at)
 VALUES ('1', '18aaf407-ff02-4f49-b11d-29877a9de906', 'APPROVED', '2023-09-06T10:20', '2023-09-06T10:20'),
        ('1', '37cdf4dd-4f9a-4d93-ad9f-eb4994cb2f52', 'PENDING', '2023-09-06T13:00', '2023-09-06T13:00');

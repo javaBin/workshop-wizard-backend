@@ -7,14 +7,22 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlinx.coroutines.channels.Channel
+import no.javabin.dto.WorkshopRegistrationMessage
 import no.javabin.repository.*
 
-fun Application.configureRouting(userRepository: UserRepository) {
+fun Application.configureRouting(
+    userRepository: UserRepository, workshopRepository: WorkshopRepository, workshopRegistrationRepository: WorkshopRegistrationRepository, eventChannel: Channel<WorkshopRegistrationMessage>
+) {
     val adminRepository = AdminRepository()
-    val workshopRepository = WorkshopRepository()
-    val workshopRegistrationRepository = WorkshopRegistrationRepository()
     val speakerRepository = SpeakerRepository()
-    val workshopService = WorkshopService(environment.config, workshopRepository, speakerRepository, workshopRegistrationRepository )
+    val workshopService = WorkshopService(
+        environment.config,
+        workshopRepository,
+        speakerRepository,
+        workshopRegistrationRepository,
+        eventChannel
+    )
     val userService = UserService(environment.config, workshopService, userRepository)
 
     configureAuth0Route(userRepository)
