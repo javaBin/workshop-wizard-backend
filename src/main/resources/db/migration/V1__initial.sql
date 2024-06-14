@@ -52,4 +52,3 @@ create table workshop_registration
 );
 
 CREATE INDEX ON workshop_registration (workshop_id, updated_at);
-CREATE INDEX ON workshop_registration (user_id, workshop_id);

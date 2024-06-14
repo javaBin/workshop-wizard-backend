@@ -5,8 +5,6 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import no.javabin.dto.WorkshopRegistrationDTO
 import no.javabin.util.TimeUtil
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.kotlin.datetime.timestamp
 
@@ -64,8 +62,18 @@ class WorkshopRegistrationRepository {
         }
     }
 
+    suspend fun createOrUpdate(workshop: WorkshopRegistration) = dbQuery {
+        WorkshopRegistrationTable.upsert {
+            it[this.userId] = workshop.userId
+            it[this.workshopId] = workshop.workshopId
+            it[this.status] = workshop.status
+            it[createdAt] = workshop.createdAt
+            it[updatedAt] = workshop.updatedAt
+        }
+    }
+
     suspend fun getByUserId(userId: Int): List<WorkshopRegistrationDTO> = dbQuery {
-        ( WorkshopRegistrationTable innerJoin WorkshopRepository.WorkshopTable )
+        (WorkshopRegistrationTable innerJoin WorkshopRepository.WorkshopTable)
             .select(
                 WorkshopRepository.WorkshopTable.title,
                 WorkshopRepository.WorkshopTable.startTime,
@@ -83,7 +91,6 @@ class WorkshopRegistrationRepository {
                 .map(WorkshopRegistrationTable::toModel).singleOrNull()
         }
     }
-
 
     suspend fun getByWorkshop(workshopId: String): List<WorkshopRegistration> {
         return dbQuery {

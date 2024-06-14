@@ -86,7 +86,7 @@ class WorkshopService(
         log.info("Unregistering user ${user.email} for workshop $workshopId")
         val registration = workshopRegistrationRepository.getByWorkshopAndUser(workshopId, user.userId)
         if (registration == null) {
-            log.error("Registration not found for workshop ID: $workshopId and user ID: ${user.userId}")
+            log.warn("Registration not found for workshop ID: $workshopId and user ID: ${user.userId}")
             return
         }
         val updatedRows = workshopRegistrationRepository.updateStatus(
