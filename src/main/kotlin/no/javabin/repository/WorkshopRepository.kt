@@ -77,7 +77,7 @@ class WorkshopRepository {
             }
     }
 
-    suspend fun listByIdsNotInList(idLIst: List<String>): List<Workshop> = dbQuery {
+    private suspend fun listByIdsNotInList(idLIst: List<String>): List<Workshop> = dbQuery {
         WorkshopTable.selectAll().where(WorkshopTable.id notInList idLIst)
             .map(WorkshopTable::toModel)
     }

@@ -12,7 +12,7 @@ class AdminRepository {
                             userMap[it.user.id]!!.firstName,
                             userMap[it.user.id]!!.lastName,
                             userMap[it.user.id]!!.email,
-                            it.state,
+                            it.status,
                         )
                     }
             AdminWorkshopDTO(workshop.value.title, workshop.value.teacherName, registrations)
@@ -29,7 +29,7 @@ class AdminRepository {
                         userMap[it.user.id]!!.firstName,
                         userMap[it.user.id]!!.lastName,
                         userMap[it.user.id]!!.email,
-                        it.state,
+                        it.status,
                     )
                 }
         return AdminWorkshopDTO(workshop.title, workshop.teacherName, registrations)

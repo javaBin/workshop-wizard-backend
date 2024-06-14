@@ -1,9 +1,14 @@
 package no.javabin
 
-import no.javabin.config.*
 import com.inventy.plugins.DatabaseFactory
 import io.ktor.server.application.*
-import no.javabin.repository.UserRepository
+import no.javabin.config.configureAuth
+import no.javabin.config.configureRouting
+import no.javabin.config.configureSerialization
+import no.javabin.config.configureStatusPages
+import no.javabin.repository.*
+import no.javabin.service.UserService
+import no.javabin.service.WorkshopService
 
 
 fun main(args: Array<String>): Unit =
@@ -19,7 +24,20 @@ fun Application.module() {
         databaseName = environment.config.property("database.databaseName").getString(),
         embedded = environment.config.property("database.embedded").getString().toBoolean(),
     ).init()
+    configureStatusPages()
     val userRepository = UserRepository()
+    val workshopRepository = WorkshopRepository()
+    val workshopRegistrationRepository = WorkshopRegistrationRepository()
+    val adminRepository = AdminRepository()
+    val speakerRepository = SpeakerRepository()
+    val workshopService = WorkshopService(
+        environment.config,
+        workshopRepository,
+        speakerRepository,
+        workshopRegistrationRepository
+    )
+    val userService = UserService(environment.config, workshopService, userRepository)
+
     configureAuth(userRepository)
-    configureRouting(userRepository)
+    configureRouting(userRepository, workshopService, userService, adminRepository)
 }
