@@ -5,6 +5,7 @@ import io.ktor.server.application.*
 import no.javabin.config.configureAuth
 import no.javabin.config.configureRouting
 import no.javabin.config.configureSerialization
+import no.javabin.config.configureStatusPages
 import no.javabin.repository.*
 import no.javabin.service.UserService
 import no.javabin.service.WorkshopService
@@ -23,6 +24,7 @@ fun Application.module() {
         databaseName = environment.config.property("database.databaseName").getString(),
         embedded = environment.config.property("database.embedded").getString().toBoolean(),
     ).init()
+    configureStatusPages()
     val userRepository = UserRepository()
     val workshopRepository = WorkshopRepository()
     val workshopRegistrationRepository = WorkshopRegistrationRepository()

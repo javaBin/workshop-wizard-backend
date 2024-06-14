@@ -50,3 +50,6 @@ create table workshop_registration
     constraint workshop_registration_fk_user foreign key (user_id) references "user" (id),
     constraint unique_user_workshop UNIQUE (user_id, workshop_id)
 );
+
+CREATE INDEX ON workshop_registration (workshop_id, updated_at);
+CREATE INDEX ON workshop_registration (user_id, workshop_id);

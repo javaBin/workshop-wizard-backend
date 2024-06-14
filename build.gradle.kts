@@ -64,7 +64,7 @@ dependencies {
     implementation("io.ktor:ktor-server-config-yaml:$ktor_version")
     implementation("io.ktor:ktor-server-cors-jvm:$ktor_version")
     implementation("io.ktor:ktor-server-sessions-jvm:$ktor_version")
-
+    implementation("io.ktor:ktor-server-status-pages:$ktor_version")
 
     //Ktor client dependencies
     implementation("io.ktor:ktor-client-core:$ktor_version")
