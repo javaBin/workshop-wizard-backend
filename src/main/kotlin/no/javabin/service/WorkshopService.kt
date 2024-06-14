@@ -11,6 +11,7 @@ import no.javabin.config.defaultClient
 import no.javabin.dto.WorkshopDTO
 import no.javabin.dto.WorkshopListImportDTO
 import no.javabin.dto.WorkshopRegistrationDTO
+import no.javabin.exception.DuplicateRegistrationException
 import no.javabin.repository.*
 import org.slf4j.LoggerFactory
 
@@ -68,7 +69,8 @@ class WorkshopService(
         log.info("Registering user [${user.userId},${user.email}] for workshop $workshopId")
         val registration = workshopRegistrationRepository.getByWorkshopAndUser(workshopId, user.userId)
 
-        if (registration?.status == WorkshopRegistrationStatus.APPROVED) return
+        if (registration?.status == WorkshopRegistrationStatus.APPROVED) throw DuplicateRegistrationException("Already registered")
+
         if (registration == null) {
             createNewRegistration(user.userId, workshopId)
         } else if (registration.status == WorkshopRegistrationStatus.CANCELLED) {
