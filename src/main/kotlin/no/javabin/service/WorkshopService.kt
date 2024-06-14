@@ -71,14 +71,8 @@ class WorkshopService(
 
         if (registration?.status == WorkshopRegistrationStatus.APPROVED) throw DuplicateRegistrationException("Already registered")
 
-        if (registration == null) {
-            createNewRegistration(user.userId, workshopId)
-        } else if (registration.status == WorkshopRegistrationStatus.CANCELLED) {
-            workshopRegistrationRepository.updateStatus(
-                registration.userId,
-                registration.workshopId,
-                WorkshopRegistrationStatus.WAITLIST
-            )
+        if (registration == null || registration.status == WorkshopRegistrationStatus.CANCELLED) {
+            createOrUpdateRegistration(user.userId, workshopId, WorkshopRegistrationStatus.WAITLIST)
         }
         updateWaitlistIfNeeded(workshopId)
     }
@@ -87,7 +81,7 @@ class WorkshopService(
         log.info("Unregistering user ${user.email} for workshop $workshopId")
         val registration = workshopRegistrationRepository.getByWorkshopAndUser(workshopId, user.userId)
         if (registration == null) {
-            log.error("Registration not found for workshop ID: $workshopId and user ID: ${user.userId}")
+            log.warn("Registration not found for workshop ID: $workshopId and user ID: ${user.userId}")
             return
         }
         val updatedRows = workshopRegistrationRepository.updateStatus(
@@ -104,19 +98,19 @@ class WorkshopService(
         updateWaitlistIfNeeded(workshopId)
     }
 
-    private suspend fun createNewRegistration(
+    private suspend fun createOrUpdateRegistration(
         userId: Int,
         workshopId: String,
+        status: WorkshopRegistrationStatus
     ) {
         val now = Clock.System.now()
-        workshopRegistrationRepository.create(
+        workshopRegistrationRepository.createOrUpdate(
             WorkshopRegistration(
-                id = null,
                 userId = userId,
                 workshopId = workshopId,
                 createdAt = now,
                 updatedAt = now,
-                status = WorkshopRegistrationStatus.WAITLIST,
+                status = status,
             )
         )
     }

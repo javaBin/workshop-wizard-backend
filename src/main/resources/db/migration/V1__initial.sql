@@ -60,7 +60,11 @@ create table speaker
     constraint speaker_fk_workshop foreign key (workshop_id) references workshop (id)
 );
 
-
+INSERT INTO speaker (index, full_name, workshop_id, bio, twitter)
+VALUES (0, 'Eksempel Speaker', '18aaf407-ff02-4f49-b11d-29877a9de906', 'Liker java', 'javamannen1975'),
+       (1, 'Tor k', '18aaf407-ff02-4f49-b11d-29877a9de906', 'Liker Kotlin', ''),
+       (0, 'Eksempel Speaker', '37cdf4dd-4f9a-4d93-ad9f-eb4994cb2f52', 'Liker java', 'javamannen1975'),
+       (0, 'Eksempel Speaker', '3ba51b2d-c986-4678-8b74-c40257576cb6', 'Liker java', 'javamannen1975');
 
 create table workshop_registration
 (
@@ -76,8 +80,7 @@ create table workshop_registration
 );
 
 CREATE INDEX ON workshop_registration (workshop_id, updated_at);
-CREATE INDEX ON workshop_registration (user_id, workshop_id);
 
 INSERT INTO workshop_registration (user_id, workshop_id, status, created_at, updated_at)
 VALUES ('1', '18aaf407-ff02-4f49-b11d-29877a9de906', 'APPROVED', '2023-09-06T10:20', '2023-09-06T10:20'),
-       ('1', '37cdf4dd-4f9a-4d93-ad9f-eb4994cb2f52', 'PENDING', '2023-09-06T13:00', '2023-09-06T13:00');
+       ('1', '37cdf4dd-4f9a-4d93-ad9f-eb4994cb2f52', 'WAITLIST', '2023-09-06T13:00', '2023-09-06T13:00');

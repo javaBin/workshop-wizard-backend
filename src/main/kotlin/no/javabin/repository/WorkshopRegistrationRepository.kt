@@ -5,24 +5,21 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import no.javabin.dto.WorkshopRegistrationDTO
 import no.javabin.util.TimeUtil
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.kotlin.datetime.timestamp
 
 
 enum class WorkshopRegistrationStatus {
-    PENDING, WAITLIST, APPROVED, CANCELLED,
+    WAITLIST, APPROVED, CANCELLED,
 }
 
 data class WorkshopRegistration(
-    override val id: Int?,
     val userId: Int,
     val workshopId: String,
     val createdAt: Instant,
     val updatedAt: Instant,
-    var status: WorkshopRegistrationStatus = WorkshopRegistrationStatus.PENDING,
-) : Model
+    var status: WorkshopRegistrationStatus = WorkshopRegistrationStatus.WAITLIST,
+)
 
 class WorkshopRegistrationRepository {
     internal object WorkshopRegistrationTable : Table("workshop_registration") {
@@ -39,7 +36,6 @@ class WorkshopRegistrationRepository {
         )
 
         fun toModel(it: ResultRow) = WorkshopRegistration(
-            null,
             it[userId].value,
             it[workshopId],
             it[createdAt],
@@ -100,7 +96,6 @@ class WorkshopRegistrationRepository {
                 .map(WorkshopRegistrationTable::toModel).singleOrNull()
         }
     }
-
 
     suspend fun getByWorkshop(workshopId: String): List<WorkshopRegistration> {
         return dbQuery {
