@@ -75,6 +75,9 @@ create table workshop_registration
     constraint unique_user_workshop UNIQUE (user_id, workshop_id)
 );
 
+CREATE INDEX ON workshop_registration (workshop_id, updated_at);
+CREATE INDEX ON workshop_registration (user_id, workshop_id);
+
 INSERT INTO workshop_registration (user_id, workshop_id, status, created_at, updated_at)
 VALUES ('1', '18aaf407-ff02-4f49-b11d-29877a9de906', 'APPROVED', '2023-09-06T10:20', '2023-09-06T10:20'),
        ('1', '37cdf4dd-4f9a-4d93-ad9f-eb4994cb2f52', 'PENDING', '2023-09-06T13:00', '2023-09-06T13:00');
