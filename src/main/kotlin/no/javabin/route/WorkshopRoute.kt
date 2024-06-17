@@ -35,7 +35,7 @@ fun Routing.workshopRoute(
             }
             val user = call.principal<CustomPrincipal>()!!
             workshopService.registerWorkshop(id, user)
-            call.respond(HttpStatusCode.OK)
+            call.respond(HttpStatusCode.OK, "Registered for workshop")
         }
         delete("/workshop/{workshopId}/unregister") {
             val id = call.parameters["workshopId"]

@@ -1,6 +1,7 @@
 package no.javabin.repository
 
 import com.inventy.plugins.DatabaseFactory.Companion.dbQuery
+import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import no.javabin.dto.WorkshopRegistrationDTO
 import no.javabin.repository.WorkshopRegistrationRepository.WorkshopRegistrationTable
@@ -42,6 +43,7 @@ class WorkshopRegistrationRepository {
         )
 
         fun toDTO(it: ResultRow) = WorkshopRegistrationDTO(
+            workshopId = it[workshopId],
             workshopTitle = it[WorkshopRepository.WorkshopTable.title],
             workshopStartTime = TimeUtil.toGmtPlus2(it[WorkshopRepository.WorkshopTable.startTime]),
             workshopEndTime = TimeUtil.toGmtPlus2(it[WorkshopRepository.WorkshopTable.endTime]),
@@ -49,13 +51,13 @@ class WorkshopRegistrationRepository {
         )
     }
 
-    suspend fun create(registration: WorkshopRegistration): Int = dbQuery {
+    suspend fun create(workshopId: String, userId: Int, state: WorkshopRegistrationState): Int = dbQuery {
         WorkshopRegistrationTable.insertAndGetId {
-            it[userId] = registration.userId
-            it[workshopId] = registration.workshopId
-            it[state] = registration.state
-            it[createdAt] = registration.createdAt
-            it[updatedAt] = registration.updatedAt
+            it[this.userId] = userId
+            it[this.workshopId] = workshopId
+            it[this.state] = state
+            it[createdAt] = Clock.System.now()
+            it[updatedAt] = Clock.System.now()
         }.value
     }
 
@@ -65,7 +67,8 @@ class WorkshopRegistrationRepository {
                 WorkshopRepository.WorkshopTable.title,
                 WorkshopRepository.WorkshopTable.startTime,
                 WorkshopRepository.WorkshopTable.endTime,
-                WorkshopRegistrationTable.state
+                WorkshopRegistrationTable.state,
+                WorkshopRegistrationTable.workshopId
             ).where { WorkshopRegistrationTable.userId eq userId }
             .map(WorkshopRegistrationTable::toDTO)
     }
@@ -81,7 +84,7 @@ class WorkshopRegistrationRepository {
 
     suspend fun getByWorkshop(workshopId: String): List<WorkshopRegistration> {
         return dbQuery {
-            WorkshopRegistrationTable.selectAll().where { WorkshopRegistrationTable.workshopId eq workshopId }
+            WorkshopRegistrationTable.selectAll().where { WorkshopRegistrationTable.workshopId eq workshopId }.forUpdate()
                 .map(WorkshopRegistrationTable::toModel)
         }
     }

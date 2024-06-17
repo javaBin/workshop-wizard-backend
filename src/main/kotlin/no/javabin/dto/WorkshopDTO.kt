@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class WorkshopDTO(
+    val id: String? = null,
     val title: String,
     val description: String,
     val startTime: Instant,

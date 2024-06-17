@@ -6,6 +6,7 @@ import no.javabin.repository.WorkshopRegistrationState
 
 @Serializable
 class WorkshopRegistrationDTO (
+    val workshopId : String,
     val workshopTitle: String,
     val workshopStartTime: Instant,
     val workshopEndTime: Instant,

@@ -95,6 +95,8 @@ class WorkshopService(
                     return
                 }
             }
+        } else {
+            workshopRegistrationRepository.create(workshopId, user.userId, WorkshopRegistrationState.APPROVED)
         }
 
     }

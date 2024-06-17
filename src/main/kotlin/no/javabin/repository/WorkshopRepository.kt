@@ -51,6 +51,7 @@ class WorkshopRepository {
         )
 
         fun toDTO(it: ResultRow) = WorkshopDTO(
+            id = it[id],
             title = it[title],
             description = it[description],
             startTime = TimeUtil.toGmtPlus2(it[startTime]),

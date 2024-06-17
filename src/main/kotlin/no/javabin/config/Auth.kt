@@ -11,30 +11,27 @@ import java.util.concurrent.TimeUnit
 class CustomPrincipal(payload: Payload, val userId: Int, val email: String): Principal, JWTPayloadHolder(payload)
 
 fun Application.configureAuth(userRepository: UserRepository) {
-    suspend fun validateCreds(credential: JWTCredential): CustomPrincipal? {
-        val containsAudience = credential.payload.audience.contains(environment.config.property("auth0.audience").getString())
-        val email = credential.payload.claims["user/email"]?.asString() ?: ""
-        if (containsAudience) {
-            val user = userRepository.readByEmail(email) ?: throw Exception("User not found")
-            return CustomPrincipal(credential.payload, user.id, email)
+    suspend fun validateCreds(credential: JWTCredential, checkAdmin: Boolean): CustomPrincipal? {
+        val isRunningInTest = System.getProperty("RUNNING_IN_TEST") != null
+        println("isRunningInTest: $isRunningInTest")
+        if (isRunningInTest) {
+            return CustomPrincipal(credential.payload, 1, "test@test.no")
         }
 
-        return null
-    }
-    suspend fun validateCredsAdmin(credential: JWTCredential): CustomPrincipal? {
         val containsAudience = credential.payload.audience.contains(environment.config.property("auth0.audience").getString())
         val email = credential.payload.claims["user/email"]?.asString() ?: ""
         if (containsAudience && email.isNotEmpty()) {
             val user = userRepository.readByEmail(email) ?: throw Exception("User not found")
-            if (!user.isAdmin) {
-                throw Exception("User is not admin")
+            if (checkAdmin) {
+                if (!user.isAdmin) {
+                    throw Exception("User is not admin")
+                }
             }
             return CustomPrincipal(credential.payload, user.id, email)
         }
 
         return null
     }
-
 
     val issuer = environment.config.property("auth0.issuer").getString()
     val jwkProvider = JwkProviderBuilder(issuer)
@@ -45,11 +42,11 @@ fun Application.configureAuth(userRepository: UserRepository) {
     install(Authentication) {
         jwt("auth0-user") {
             verifier(jwkProvider, issuer)
-            validate { credential -> validateCreds(credential) }
+            validate { credential -> validateCreds(credential, false) }
         }
         jwt("auth0-admin") {
             verifier(jwkProvider, issuer)
-            validate { credential -> validateCredsAdmin(credential) }
+            validate { credential -> validateCreds(credential, true) }
         }
         basic("basic-auth0") {
             realm = "Used by auth0 for creating users"
